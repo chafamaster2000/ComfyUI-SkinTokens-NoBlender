@@ -21,6 +21,7 @@ it runs on a headless GPU server.
 | **SkinTokens Loader** | Loads the TokenRig model (auto-downloaded from HuggingFace on first use) and wraps it for ComfyUI's VRAM manager. Pick a checkpoint from the dropdown - no path to configure. |
 | **SkinTokens Rig** | Static mesh → rigged skinned `.glb`. Accepts a native `MESH` (from Trellis/remesh) or a `File3D` (`FILE_3D_GLB`/`GLTF`/`OBJ`/`STL`, from Load3D). Optional relabel, texture transfer, voxel post-process, skin-only-against-existing-skeleton. |
 | **SkinTokens Relabel** | Standalone structural relabel of an already-rigged glb (Mixamo/UE5). Model-free. |
+| **SkinTokens Clean Weights** | Deterministic skin-weight coherence repair on a rigged glb - fixes speckled/incoherent weights. Model-free. |
 
 The rigged output is a `FILE_3D_GLB`, so it drops straight into ComfyUI core's
 `Preview3DAdvanced` (which has a **showSkeleton** toggle) and `Save3D` - no custom
@@ -132,6 +133,36 @@ To cut a release:
 The registry API key lives only as the `REGISTRY_ACCESS_TOKEN` repo secret (never
 in the repo). Rotate it on registry.comfy.org, then
 `gh secret set REGISTRY_ACCESS_TOKEN` - nothing in the workflow changes.
+
+## Compared to the Blender-based pack
+
+The prior-art pack (`Aero-Ex/ComfyUI-SkinTokens`) is not actually
+Blender-free: it shells out to a Blender subprocess (`bpy_server.py`, run in
+embedded-`bpy` or headless-Blender mode) for glb import/export, joint renaming,
+and texture transfer, POSTing payloads to that child process and managing its
+lifecycle. This pack reimplements every one of those steps **in-process, pure
+Python** - so it installs from plain pip deps and runs on a headless GPU box with
+no Blender anywhere.
+
+| Step | Blender-based pack | This pack |
+|------|--------------------|-----------|
+| glb import | `bpy.ops.import_scene.gltf` | `skintokens/glb_io.py` (trimesh) |
+| skinned glb export | `bpy.ops.export_scene.gltf` | `glb_io.export_glb` (pygltflib; hand-written inverse bind matrices + top-4 weight packing) |
+| joint relabel | rename inside Blender | `skintokens/relabel.py` (structural, topology-driven) |
+| texture transfer | POST to bpy server | `skintokens/transfer.py` |
+| voxel post-process | `open3d` + `fast-simplification` | `skintokens/postprocess.py` (numpy voxelizer + scipy) |
+
+Consequences:
+
+- **Dependencies dropped:** no `bpy`/Blender, no `open3d`, no
+  `fast-simplification`, and no embedded server stack (`gradio`/`bottle`/
+  `tornado`/`dill`).
+- **New capability:** the **SkinTokens Clean Weights** node (deterministic
+  skin-weight coherence repair) has no equivalent in the Blender-based pack.
+- **ComfyUI integration:** the Loader wires into ComfyUI's VRAM manager /
+  ModelPatcher and offers an auto-download checkpoint dropdown.
+- **One thing the other pack has that this one doesn't:** a custom rig-previewer
+  node - here you use ComfyUI core's `Preview3DAdvanced` (`showSkeleton`) instead.
 
 ## Credits
 

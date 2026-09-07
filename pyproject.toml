@@ -1,7 +1,7 @@
 [project]
 name = "comfyui-skintokens-noblender"
-version = "0.0.1"
-description = "Auto-rig a static mesh into a skinned .glb (skeleton + weights) - pure Python, no Blender."
+version = "1.0.0"
+description = "Auto-rig a static mesh into a skinned .glb (skeleton + weights) - fully pure-Python glb I/O, no Blender/bpy subprocess, plus Mixamo/UE5 relabel, texture transfer, voxel post-process, and skin-weight cleanup."
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.11"
