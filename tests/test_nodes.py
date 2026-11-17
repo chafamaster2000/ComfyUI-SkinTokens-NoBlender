@@ -80,6 +80,7 @@ def test_rig_input_contract():
     assert opt["use_transfer"][0] == "BOOLEAN" and opt["use_transfer"][1]["default"] is True
     assert opt["use_postprocess"][0] == "BOOLEAN" and opt["use_postprocess"][1]["default"] is True
     assert opt["use_skeleton"][0] == "BOOLEAN" and opt["use_skeleton"][1]["default"] is False
+    assert opt["seed"][0] == "INT" and opt["seed"][1]["default"] == -1
 
 
 def test_relabel_input_output_contract():

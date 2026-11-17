@@ -133,6 +133,12 @@ class SkinTokensRig:
                 "temperature": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 5.0, "step": 0.05}),
                 "repetition_penalty": ("FLOAT", {"default": 2.0, "min": 1.0, "max": 5.0, "step": 0.1}),
                 "num_beams": ("INT", {"default": 10, "min": 1, "max": 50}),
+                "seed": ("INT", {
+                    "default": -1, "min": -1, "max": 2**63 - 1,
+                    "tooltip": "Fixes every RNG of the run (sampling, point sampling, "
+                               "transfer) so the same seed gives the same skeleton. "
+                               "-1: unseeded.",
+                }),
             },
         }
 
@@ -158,6 +164,21 @@ class SkinTokensRig:
         temperature: float = 1.0,
         repetition_penalty: float = 2.0,
         num_beams: int = 10,
+        seed: int = -1,
+    ) -> Tuple:
+        from skintokens.seeding import seeded
+
+        with seeded(seed):
+            return self._rig(
+                model, mesh, filename_prefix, relabel, convention, relabel_fingers,
+                clean_weights, use_transfer, use_postprocess, use_skeleton, top_k, top_p,
+                temperature, repetition_penalty, num_beams,
+            )
+
+    def _rig(
+        self, model, mesh, filename_prefix, relabel, convention, relabel_fingers,
+        clean_weights, use_transfer, use_postprocess, use_skeleton, top_k, top_p,
+        temperature, repetition_penalty, num_beams,
     ) -> Tuple:
         from skintokens import comfy_types, glb_io, infer, relabel as relabel_mod
 
