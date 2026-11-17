@@ -44,6 +44,13 @@ def test_restores_caller_state():
     assert np.random.default_rng.__module__.startswith("numpy")
 
 
+def test_explicit_seeds_pass_through():
+    with seeded(7):
+        a = np.random.default_rng(seed=0).random()
+        b = np.random.default_rng(0).random()
+    assert a == b == np.random.default_rng(0).random()
+
+
 def test_negative_seed_is_a_no_op():
     orig = np.random.default_rng
     with seeded(-1):

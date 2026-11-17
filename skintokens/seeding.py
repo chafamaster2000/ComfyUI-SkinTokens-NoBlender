@@ -32,10 +32,10 @@ def seeded(seed: int):
     # calls still differ from each other while the whole run is reproducible.
     children = np.random.SeedSequence(seed)
 
-    def default_rng(seed_arg=None):
-        if seed_arg is None:
+    def default_rng(*args, **kwargs):
+        if (args[0] if args else kwargs.get("seed")) is None:
             return orig_default_rng(children.spawn(1)[0])
-        return orig_default_rng(seed_arg)
+        return orig_default_rng(*args, **kwargs)
 
     devices = list(range(torch.cuda.device_count())) if torch.cuda.is_available() else []
     with torch.random.fork_rng(devices=devices):
